@@ -1,0 +1,329 @@
+/* StudyPal - visual baseline (design tokens, layout, bubbles, markdown) */
+
+:root {
+  --accent: #6d5efc;
+  --accent-contrast: #ffffff;
+  --accent-bg: rgba(109, 94, 252, 0.12);
+  --bg: #f6f5fa;
+  --surface: #ffffff;
+  --surface-muted: #f0eff6;
+  --border: #e2e0eb;
+  --text: #1f1d2b;
+  --text-muted: #6b6878;
+  --error-bg: #fdecec;
+  --error-border: #f3b4b4;
+  --error-text: #9a2f2f;
+  --shadow: 0 2px 10px rgba(20, 16, 40, 0.06);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #9d8cff;
+    --accent-contrast: #171526;
+    --accent-bg: rgba(157, 140, 255, 0.18);
+    --bg: #14131c;
+    --surface: #1c1a28;
+    --surface-muted: #232134;
+    --border: #322f45;
+    --text: #f0eef8;
+    --text-muted: #a6a2b8;
+    --error-bg: #2c1a1a;
+    --error-border: #6b2f2f;
+    --error-text: #ff9d9d;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  max-width: 720px;
+  margin: 0 auto;
+  background: var(--bg);
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.app-header .tagline {
+  margin: var(--space-1) 0 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.message-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-5) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.msg-row {
+  display: flex;
+  width: 100%;
+}
+
+.msg-row-user {
+  justify-content: flex-end;
+}
+
+.msg-row-assistant {
+  justify-content: flex-start;
+}
+
+.msg-bubble {
+  max-width: 85%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  line-height: 1.5;
+  box-shadow: var(--shadow);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.msg-user {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  border-bottom-right-radius: var(--radius-sm);
+}
+
+.msg-assistant {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.msg-thinking {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-style: italic;
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.msg-error {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.input-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.input-bar input {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  min-width: 0;
+}
+
+.input-bar input:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.input-bar input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.input-bar input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input-bar button {
+  padding: var(--space-3) var(--space-5);
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.input-bar button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.input-bar button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.input-bar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Markdown, scoped to assistant bubbles only */
+.msg-assistant h1,
+.msg-assistant h2,
+.msg-assistant h3,
+.msg-assistant h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: var(--space-3) 0 var(--space-2);
+  color: var(--text);
+}
+
+.msg-assistant h1:first-child,
+.msg-assistant h2:first-child,
+.msg-assistant h3:first-child,
+.msg-assistant h4:first-child {
+  margin-top: 0;
+}
+
+.msg-assistant p {
+  margin: 0 0 var(--space-2);
+}
+
+.msg-assistant p:last-child {
+  margin-bottom: 0;
+}
+
+.msg-assistant ul,
+.msg-assistant ol {
+  margin: 0 0 var(--space-2);
+  padding-left: 1.25rem;
+}
+
+.msg-assistant li {
+  margin-bottom: var(--space-1);
+}
+
+.msg-assistant code {
+  font-family: var(--font-mono);
+  background: var(--surface-muted);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+  font-size: 0.875em;
+}
+
+.msg-assistant pre {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  overflow-x: auto;
+  margin: 0 0 var(--space-2);
+}
+
+.msg-assistant pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.85em;
+}
+
+.msg-assistant hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: var(--space-3) 0;
+}
+
+.msg-assistant table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9em;
+  display: block;
+  overflow-x: auto;
+}
+
+.msg-assistant th,
+.msg-assistant td {
+  border: 1px solid var(--border);
+  padding: var(--space-1) var(--space-2);
+  text-align: left;
+}
+
+.msg-assistant blockquote {
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--border);
+  color: var(--text-muted);
+}
+
+.msg-assistant a {
+  color: var(--accent);
+}
+
+/* Responsive down to ~360px */
+@media (max-width: 480px) {
+  .app-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .message-area {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .msg-bubble {
+    max-width: 92%;
+  }
+
+  .input-bar {
+    padding: var(--space-3);
+  }
+}
