@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
 const API_URL = 'http://localhost:8000/chat'
+const PROFILE_URL = 'http://localhost:8000/profile'
 
 function Bubble({ msg }) {
   if (msg.role === 'error') {
@@ -41,9 +42,70 @@ export default function App() {
   const [thinking, setThinking] = useState(false)
   const scrollRef = useRef(null)
 
+  const [facts, setFacts] = useState([])
+  const [profileError, setProfileError] = useState('')
+  const [factInput, setFactInput] = useState('')
+  const [savingFact, setSavingFact] = useState(false)
+
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages, thinking])
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const res = await fetch(PROFILE_URL)
+        if (!res.ok) {
+          throw new Error(`Request failed (${res.status})`)
+        }
+        const data = await res.json()
+        setFacts(data.facts || [])
+        setProfileError('')
+      } catch (err) {
+        setProfileError(
+          `Could not load StudyPal's memory: ${err.message || 'unknown error'}`
+        )
+      }
+    }
+    loadProfile()
+  }, [])
+
+  const addFact = async (e) => {
+    e.preventDefault()
+    const fact = factInput.trim()
+    if (!fact || savingFact) return
+
+    setSavingFact(true)
+    try {
+      const res = await fetch(PROFILE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fact }),
+      })
+
+      if (!res.ok) {
+        let detail = `Request failed (${res.status})`
+        try {
+          const body = await res.json()
+          if (body?.detail) detail = body.detail
+        } catch {
+          // response wasn't JSON; keep the generic message
+        }
+        throw new Error(detail)
+      }
+
+      const data = await res.json()
+      setFacts(data.facts || [])
+      setFactInput('')
+      setProfileError('')
+    } catch (err) {
+      setProfileError(
+        `Could not save that fact: ${err.message || 'unknown error'}`
+      )
+    } finally {
+      setSavingFact(false)
+    }
+  }
 
   const sendMessage = async () => {
     const text = input.trim()
@@ -107,6 +169,43 @@ export default function App() {
         <h1>StudyPal</h1>
         <p className="tagline">Your friendly AI study buddy</p>
       </header>
+
+      {(facts.length > 0 || profileError) && (
+        <section className="memory-panel" aria-label="StudyPal remembers">
+          {facts.length > 0 && (
+            <>
+              <span className="memory-label">StudyPal remembers</span>
+              <div className="memory-chips">
+                {facts.map((fact, i) => (
+                  <span className="memory-chip" key={i}>
+                    {fact}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+          {profileError && <div className="memory-error">{profileError}</div>}
+        </section>
+      )}
+
+      <form className="add-fact-bar" onSubmit={addFact}>
+        <label className="add-fact-label" htmlFor="add-fact-input">
+          Remember something about you
+        </label>
+        <div className="add-fact-row">
+          <input
+            id="add-fact-input"
+            type="text"
+            placeholder="e.g. weak on recursion"
+            value={factInput}
+            onChange={(e) => setFactInput(e.target.value)}
+            disabled={savingFact}
+          />
+          <button type="submit" disabled={savingFact || !factInput.trim()}>
+            Remember
+          </button>
+        </div>
+      </form>
 
       <main className="message-area">
         {messages.map((msg, i) => (

@@ -93,6 +93,123 @@ body {
   color: var(--text-muted);
 }
 
+/* M3: memory panel ("StudyPal remembers" chips) + add-fact control */
+.memory-panel {
+  padding: var(--space-3) var(--space-5);
+  background: var(--surface-muted);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.memory-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+.memory-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.memory-chip {
+  display: inline-block;
+  max-width: 100%;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.memory-error {
+  font-size: 0.8rem;
+  color: var(--error-text);
+}
+
+.add-fact-bar {
+  padding: var(--space-3) var(--space-5);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.add-fact-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.add-fact-row {
+  display: flex;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.add-fact-row input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+}
+
+.add-fact-row input:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.add-fact-row input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.add-fact-row input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.add-fact-row button {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.add-fact-row button:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.add-fact-row button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.add-fact-row button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .message-area {
   flex: 1;
   overflow-y: auto;
@@ -321,6 +438,11 @@ body {
 /* Responsive down to ~360px */
 @media (max-width: 480px) {
   .app-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .memory-panel,
+  .add-fact-bar {
     padding: var(--space-3) var(--space-4);
   }
 

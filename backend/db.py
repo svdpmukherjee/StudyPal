@@ -1,8 +1,10 @@
 """MongoDB access for StudyPal.
 
 Exposes the `messages` collection (episodic memory) and a small helper to
-persist a chat turn. Works against local MongoDB or Atlas (mongodb+srv),
-since the client always passes an explicit CA bundle via certifi.
+persist a chat turn, plus the `profile` collection (durable learner facts,
+M3) with helpers to read and add facts. Works against local MongoDB or
+Atlas (mongodb+srv), since the client always passes an explicit CA bundle
+via certifi.
 """
 
 import os
@@ -22,6 +24,9 @@ MONGODB_DB = os.getenv("MONGODB_DB", "studypal")
 client = MongoClient(MONGODB_URI, tlsCAFile=certifi.where())
 db = client[MONGODB_DB]
 messages = db["messages"]
+profile = db["profile"]
+
+PROFILE_ID = "learner"
 
 
 def save_message(role: str, text: str):
@@ -34,3 +39,37 @@ def save_message(role: str, text: str):
     result = messages.insert_one(doc)
     doc["_id"] = result.inserted_id
     return doc
+
+
+def get_profile_facts() -> list[str]:
+    """Return the learner's durable facts, or [] if no profile doc exists."""
+    doc = profile.find_one({"_id": PROFILE_ID})
+    if not doc:
+        return []
+    return doc.get("facts", [])
+
+
+def add_profile_fact(fact: str) -> list[str]:
+    """Trim + add a fact (case-insensitive dedup) and return the full list.
+
+    Blank/whitespace-only facts are ignored (no-op). Uses $addToSet against
+    the existing facts (case-insensitive comparison against current values)
+    so re-adding the same fact in a different case does not duplicate it.
+    """
+    fact = fact.strip()
+    if not fact:
+        return get_profile_facts()
+
+    existing = get_profile_facts()
+    if fact.lower() in {f.lower() for f in existing}:
+        return existing
+
+    profile.update_one(
+        {"_id": PROFILE_ID},
+        {
+            "$addToSet": {"facts": fact},
+            "$set": {"updated_ts": datetime.now(timezone.utc)},
+        },
+        upsert=True,
+    )
+    return get_profile_facts()
