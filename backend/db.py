@@ -49,6 +49,21 @@ def get_profile_facts() -> list[str]:
     return doc.get("facts", [])
 
 
+def get_recent_messages(limit: int = 20) -> list[dict]:
+    """Return the last `limit` chat turns, oldest -> newest, as {role, text}.
+
+    Returns [] when the `messages` collection is empty. Used by the M5
+    summarizer subagent to read recent conversation context.
+    """
+    docs = list(
+        messages.find({}, {"role": 1, "text": 1})
+        .sort([("ts", -1), ("_id", -1)])
+        .limit(limit)
+    )
+    docs.reverse()
+    return [{"role": d["role"], "text": d["text"]} for d in docs]
+
+
 def add_profile_fact(fact: str) -> list[str]:
     """Trim + add a fact (case-insensitive dedup) and return the full list.
 
