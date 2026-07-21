@@ -1,8 +1,9 @@
-"""StudyPal FastAPI backend - M1 chat core.
+"""StudyPal FastAPI backend - M1 chat core + M2 model routing.
 
-One route, POST /chat: save the user message, call OpenRouter with the
-single OPENROUTER_MODEL, save the assistant reply, return it. No routing,
-memory, or skills yet (those are M2+).
+One route, POST /chat: save the user message, route it to a tier
+(cheap/mid/strong), call OpenRouter with the tier's model, save the
+assistant reply, return reply + tier + model. No memory or skills yet
+(those are M3+).
 """
 
 from fastapi import FastAPI, HTTPException
@@ -11,6 +12,7 @@ from pydantic import BaseModel
 
 from db import save_message
 from openrouter import OpenRouterError, chat_completion
+from router import model_for, route
 
 app = FastAPI(title="StudyPal API")
 
@@ -34,6 +36,8 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+    tier: str
+    model: str
 
 
 @app.get("/health")
@@ -45,16 +49,19 @@ def health():
 def chat(req: ChatRequest):
     save_message("user", req.message)
 
+    tier = route(req.message)
+    model = model_for(tier)
+
     context = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": req.message},
     ]
 
     try:
-        reply = chat_completion(context)
+        reply = chat_completion(context, model)
     except OpenRouterError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     save_message("assistant", reply)
 
-    return {"reply": reply}
+    return {"reply": reply, "tier": tier, "model": model}
