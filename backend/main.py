@@ -1,12 +1,14 @@
-"""StudyPal FastAPI backend - M1 chat core + M2 model routing + M3 memory.
+"""StudyPal FastAPI backend - M1 chat core + M2 model routing + M3 memory
++ M4 skills.
 
 POST /chat: save the user message, load durable profile facts and inject
-them into the system prompt, route to a tier (cheap/mid/strong), call
-OpenRouter with the tier's model, save the assistant reply, return
-reply + tier + model.
+them into the system prompt, route to a tier (cheap/mid/strong) - or, if a
+skill was requested, let the skill choose the tier and inject its prompt -
+call OpenRouter with the tier's model, save the assistant reply, return
+reply + tier + model (+ skill).
 
-GET/POST /profile: read/append durable learner facts (M3 memory). Skills
-(M4) and automatic distillation (M5) are not implemented here.
+GET/POST /profile: read/append durable learner facts (M3 memory).
+Automatic distillation (M5) is not implemented here.
 """
 
 from fastapi import FastAPI, HTTPException
@@ -14,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pymongo.errors import PyMongoError
 
+import skills
 from db import add_profile_fact, get_profile_facts, save_message
 from openrouter import OpenRouterError, chat_completion
 from router import model_for, route
@@ -36,12 +39,14 @@ SYSTEM_PROMPT = (
 
 class ChatRequest(BaseModel):
     message: str
+    skill: str | None = None
 
 
 class ChatResponse(BaseModel):
     reply: str
     tier: str
     model: str
+    skill: str | None = None
 
 
 class ProfileResponse(BaseModel):
@@ -83,7 +88,13 @@ def post_profile(req: ProfileFactRequest):
 def chat(req: ChatRequest):
     save_message("user", req.message)
 
-    tier = route(req.message)
+    if req.skill is not None and req.skill not in skills.ALLOWED_SKILLS:
+        raise HTTPException(status_code=400, detail=f"Unknown skill: {req.skill!r}")
+
+    if req.skill is not None:
+        tier = skills.skill_tier(req.skill)
+    else:
+        tier = route(req.message)
     model = model_for(tier)
 
     system_prompt = SYSTEM_PROMPT
@@ -101,6 +112,13 @@ def chat(req: ChatRequest):
             "weak spots."
         )
 
+    if req.skill is not None:
+        skill_prompt = skills.load_skill(req.skill)
+        system_prompt += (
+            "\n\nFor this reply, apply this tutoring move:\n"
+            f"{skill_prompt}"
+        )
+
     context = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": req.message},
@@ -113,4 +131,4 @@ def chat(req: ChatRequest):
 
     save_message("assistant", reply)
 
-    return {"reply": reply, "tier": tier, "model": model}
+    return {"reply": reply, "tier": tier, "model": model, "skill": req.skill}

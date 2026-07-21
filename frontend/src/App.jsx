@@ -22,6 +22,7 @@ function Bubble({ msg }) {
           {msg.tier && msg.model && (
             <span className="msg-tag">
               {msg.tier} · {msg.model}
+              {msg.skill && <span className="msg-skill">via {msg.skill}</span>}
             </span>
           )}
         </div>
@@ -107,7 +108,7 @@ export default function App() {
     }
   }
 
-  const sendMessage = async () => {
+  const sendMessage = async (skill = null) => {
     const text = input.trim()
     if (!text || thinking) return
 
@@ -116,10 +117,11 @@ export default function App() {
     setThinking(true)
 
     try {
+      const body = skill ? { message: text, skill } : { message: text }
       const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify(body),
       })
 
       if (!res.ok) {
@@ -141,6 +143,7 @@ export default function App() {
           text: data.reply,
           tier: data.tier,
           model: data.model,
+          skill: data.skill,
         },
       ])
     } catch (err) {
@@ -239,6 +242,25 @@ export default function App() {
           Send
         </button>
       </form>
+
+      <div className="skill-bar" aria-label="Tutoring moves">
+        <button
+          type="button"
+          className="skill-btn"
+          onClick={() => sendMessage('explain-simply')}
+          disabled={thinking || !input.trim()}
+        >
+          Explain simply
+        </button>
+        <button
+          type="button"
+          className="skill-btn"
+          onClick={() => sendMessage('quiz-me')}
+          disabled={thinking || !input.trim()}
+        >
+          Quiz me
+        </button>
+      </div>
     </div>
   )
 }
