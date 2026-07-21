@@ -18,6 +18,11 @@ function Bubble({ msg }) {
       <div className="msg-row msg-row-assistant">
         <div className="msg-bubble msg-assistant">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
+          {msg.tier && msg.model && (
+            <span className="msg-tag">
+              {msg.tier} · {msg.model}
+            </span>
+          )}
         </div>
       </div>
     )
@@ -67,7 +72,15 @@ export default function App() {
       }
 
       const data = await res.json()
-      setMessages((prev) => [...prev, { role: 'assistant', text: data.reply }])
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          text: data.reply,
+          tier: data.tier,
+          model: data.model,
+        },
+      ])
     } catch (err) {
       setMessages((prev) => [
         ...prev,
