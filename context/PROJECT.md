@@ -10,7 +10,7 @@ updates it at session end. One row per module (see
 | M2 | Model routing | DONE |
 | M3 | Memory | DONE |
 | M4 | Skills | DONE |
-| M5 | Summarizer agent | TODO |
+| M5 | Summarizer agent | DONE |
 | M6 | Eval | TODO |
 
 Status values: TODO -> IN PROGRESS -> DONE.

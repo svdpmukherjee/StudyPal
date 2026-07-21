@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm'
 
 const API_URL = 'http://localhost:8000/chat'
 const PROFILE_URL = 'http://localhost:8000/profile'
+const SUMMARIZE_URL = 'http://localhost:8000/summarize'
 
 function Bubble({ msg }) {
   if (msg.role === 'error') {
@@ -47,6 +48,9 @@ export default function App() {
   const [profileError, setProfileError] = useState('')
   const [factInput, setFactInput] = useState('')
   const [savingFact, setSavingFact] = useState(false)
+  const [summarizing, setSummarizing] = useState(false)
+  const [added, setAdded] = useState([])
+  const [hasSummarized, setHasSummarized] = useState(false)
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
@@ -105,6 +109,38 @@ export default function App() {
       )
     } finally {
       setSavingFact(false)
+    }
+  }
+
+  const summarizeSession = async () => {
+    if (summarizing) return
+
+    setSummarizing(true)
+    try {
+      const res = await fetch(SUMMARIZE_URL, { method: 'POST' })
+
+      if (!res.ok) {
+        let detail = `Request failed (${res.status})`
+        try {
+          const body = await res.json()
+          if (body?.detail) detail = body.detail
+        } catch {
+          // response wasn't JSON; keep the generic message
+        }
+        throw new Error(detail)
+      }
+
+      const data = await res.json()
+      setFacts(data.facts || [])
+      setAdded(data.added || [])
+      setHasSummarized(true)
+      setProfileError('')
+    } catch (err) {
+      setProfileError(
+        `Could not summarize the session: ${err.message || 'unknown error'}`
+      )
+    } finally {
+      setSummarizing(false)
     }
   }
 
@@ -190,6 +226,24 @@ export default function App() {
           {profileError && <div className="memory-error">{profileError}</div>}
         </section>
       )}
+
+      <div className="summarize-row">
+        <button
+          type="button"
+          className="summarize-btn"
+          onClick={summarizeSession}
+          disabled={summarizing}
+        >
+          {summarizing ? 'Summarizing…' : 'Summarize session'}
+        </button>
+        {hasSummarized && (
+          <span className="summarize-added">
+            {added.length > 0
+              ? `Added ${added.length}: ${added.join(', ')}`
+              : 'Nothing new to remember'}
+          </span>
+        )}
+      </div>
 
       <form className="add-fact-bar" onSubmit={addFact}>
         <label className="add-fact-label" htmlFor="add-fact-input">

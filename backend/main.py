@@ -17,7 +17,8 @@ from pydantic import BaseModel
 from pymongo.errors import PyMongoError
 
 import skills
-from db import add_profile_fact, get_profile_facts, save_message
+import summarizer
+from db import add_profile_fact, get_profile_facts, get_recent_messages, save_message
 from openrouter import OpenRouterError, chat_completion
 from router import model_for, route
 
@@ -57,6 +58,11 @@ class ProfileFactRequest(BaseModel):
     fact: str
 
 
+class SummarizeResponse(BaseModel):
+    added: list[str]
+    facts: list[str]
+
+
 @app.get("/health")
 def health():
     return {"ok": True}
@@ -82,6 +88,41 @@ def post_profile(req: ProfileFactRequest):
         raise HTTPException(status_code=502, detail=f"Profile store error: {exc}") from exc
 
     return {"facts": facts}
+
+
+@app.post("/summarize", response_model=SummarizeResponse)
+def summarize():
+    try:
+        msgs = get_recent_messages(20)
+    except PyMongoError as exc:
+        raise HTTPException(status_code=502, detail=f"Chat store error: {exc}") from exc
+
+    if not msgs:
+        try:
+            facts = get_profile_facts()
+        except PyMongoError as exc:
+            raise HTTPException(
+                status_code=502, detail=f"Profile store error: {exc}"
+            ) from exc
+        return {"added": [], "facts": facts}
+
+    try:
+        candidates = summarizer.summarize_messages(msgs)
+    except OpenRouterError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    added = []
+    try:
+        facts = get_profile_facts()
+        for candidate in candidates:
+            before = facts
+            facts = add_profile_fact(candidate)
+            if candidate.strip() and len(facts) > len(before):
+                added.append(candidate.strip())
+    except PyMongoError as exc:
+        raise HTTPException(status_code=502, detail=f"Profile store error: {exc}") from exc
+
+    return {"added": added, "facts": facts}
 
 
 @app.post("/chat", response_model=ChatResponse)

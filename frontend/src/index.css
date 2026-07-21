@@ -210,6 +210,52 @@ body {
   cursor: not-allowed;
 }
 
+/* M5: "Summarize session" control + "Added ..." feedback */
+.summarize-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.summarize-btn {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.summarize-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.summarize-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.summarize-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.summarize-added {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  word-break: break-word;
+}
+
 .message-area {
   flex: 1;
   overflow-y: auto;
@@ -490,7 +536,8 @@ body {
   }
 
   .memory-panel,
-  .add-fact-bar {
+  .add-fact-bar,
+  .summarize-row {
     padding: var(--space-3) var(--space-4);
   }
 

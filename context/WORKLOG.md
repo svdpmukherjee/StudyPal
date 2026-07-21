@@ -52,3 +52,31 @@ Dated log of what got done each session, one line each. Newest at the bottom.
   the skill prompt reached the model. Note: a stale uvicorn (no `--reload`) faked an
   early pass; restart the server after a dev handoff. Visual items (dark toggle,
   360px, focus ring) left to human. User approved at CHECKPOINT 2.
+- 2026-07-21: M5 (Summarizer agent) DONE. Spec `.claude/specs/M5_summarizer.md`.
+  Added `backend/summarizer.py` (the summarizer subagent: `summarize_messages()`
+  makes ONE strong-tier LLM call — `router.model_for("strong")`,
+  `anthropic/claude-sonnet-4.5` confirmed live — to distill recent chat turns into
+  candidate durable learner facts; robust JSON parse strips fences/prose, garbage
+  -> `[]`, never crashes; lets `OpenRouterError` propagate). `backend/db.py` got
+  `get_recent_messages(limit=20)` (oldest->newest, empty -> `[]`, single certifi
+  client; sort `[("ts",-1),("_id",-1)]` with an `_id` tiebreaker for deterministic
+  order under ms-collision ties). `backend/main.py` added `POST /summarize`
+  (`SummarizeResponse`): pulls last 20 msgs (Mongo err -> clean 502), empty history
+  short-circuits with NO model call, else runs summarizer (`OpenRouterError` -> 502)
+  and stores each fact via M3's `add_profile_fact` dedup, returning
+  `{added, facts}`; `/chat` + `{reply,tier,model,skill}` shape untouched. Frontend
+  `App.jsx` got a "Summarize session" button + `summarizeSession()` (try/catch,
+  disables in-flight, refreshes M3 chips, shows "Added N: ..."/"Nothing new"),
+  theme-token `.summarize-*` in `index.css`; Markdown render untouched. Tester:
+  ALL ACs PASS incl. unit (recent-msg order + tiebreaker, robust parse
+  clean/fenced/garbage), integration dedup lands in profile, a REAL live strong-tier
+  smoke (chat "recursion in binary trees" -> live `POST /summarize` 200 -> facts
+  referenced the topic -> `GET /profile` reflected them; full chat->subagent->durable
+  memory round-trip), and a live 502 negative-slug check (invalid `MODEL_STRONG` via
+  override, real `.env` untouched -> clean `HTTPException(502)`, not 500). One bug
+  found (sort had no tiebreaker -> wrong order on rapid inserts), routed back to
+  developer once, fixed, re-tested green. User confirmed the save round-trip live
+  (saw "Added 4: ..." land in the `profile` collection via `GET /profile`) and
+  approved at CHECKPOINT 2. Visual/browser checks (dark toggle, 360px, focus) left
+  to human. Note: exact-text dedup piles up near-duplicate facts (a UX/follow-up
+  item, out of M5 scope).
