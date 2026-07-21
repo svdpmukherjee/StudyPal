@@ -18,3 +18,17 @@ Dated log of what got done each session, one line each. Newest at the bottom.
   smoke routing to the strong tier (`anthropic/claude-sonnet-4.5`, 200 + non-empty)
   and a 502-not-500 bad-slug check. User approved at CHECKPOINT 2. Built on branch
   `feature/model-routing`.
+- 2026-07-21: M3 (Memory) DONE. Spec `.claude/specs/M3_memory.md`. Added a
+  `profile` collection (single `{_id:"learner", facts[], updated_ts}` doc) with
+  `get_profile_facts`/`add_profile_fact` (trim + case-insensitive dedup,
+  `$addToSet`) in `backend/db.py`, reusing the certifi-pinned client; `GET`/`POST
+  /profile` routes in `backend/main.py` (400 on blank fact, Mongo failures wrapped
+  clean); `/chat` injects the learner's facts into the system prompt (shape
+  `{reply, tier, model}` unchanged). Frontend `App.jsx` loads the profile on mount,
+  shows a "StudyPal remembers" chip panel + labelled add-fact form (try/catch,
+  inline errors), theme-aware `.memory-*` styling in `index.css`; Markdown render
+  + `[tier·model]` tag untouched. Tester: AC1 mongomock dedup 4/4, AC2 routes,
+  AC3/AC6 real live smoke routing to mid (`google/gemini-2.5-flash`, 200, reply
+  recalled the seeded "recursion" weak spot) + 502-not-500 bad-slug check; frontend
+  static PASS. Purely visual items (browser eyeball, 360px, dark toggle) left to
+  human per spec. User approved at CHECKPOINT 2.
