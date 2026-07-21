@@ -435,6 +435,54 @@ body {
   color: var(--text-muted);
 }
 
+/* M4: skill tag shown inside the msg-tag row, e.g. "via quiz-me" */
+.msg-skill {
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* M4: skill trigger buttons ("Explain simply", "Quiz me") near the input bar */
+.skill-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 0 var(--space-4) var(--space-4);
+  background: var(--surface);
+}
+
+.skill-btn {
+  padding: var(--space-2) var(--space-4);
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.skill-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.skill-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.skill-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Responsive down to ~360px */
 @media (max-width: 480px) {
   .app-header {
@@ -456,5 +504,9 @@ body {
 
   .input-bar {
     padding: var(--space-3);
+  }
+
+  .skill-bar {
+    padding: 0 var(--space-3) var(--space-3);
   }
 }

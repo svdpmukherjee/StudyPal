@@ -32,3 +32,23 @@ Dated log of what got done each session, one line each. Newest at the bottom.
   recalled the seeded "recursion" weak spot) + 502-not-500 bad-slug check; frontend
   static PASS. Purely visual items (browser eyeball, 360px, dark toggle) left to
   human per spec. User approved at CHECKPOINT 2.
+- 2026-07-21: M4 (Skills) DONE. Spec `.claude/specs/M4_skills.md`. Added two
+  runtime tutoring "moves" as skill prompt files (`backend/skills/explain-simply.md`,
+  `quiz-me.md` — procedural memory, prompts only, ask for chat-friendly Markdown)
+  loaded by a new allowlisted `backend/skills.py` (`ALLOWED_SKILLS =
+  {explain-simply:mid, quiz-me:strong}`, `load_skill()` path-traversal-safe +
+  `ValueError` on unknown names, `skill_tier()`). `/chat` gained an optional
+  `skill` field: invalid -> clean 502-style `HTTPException(400)` (not 500), valid
+  skill drives the tier (bypasses `route()`) and its prompt is injected AFTER the
+  M3 memory block; no-skill path + `router.py` untouched; response echoes `skill`.
+  Frontend `App.jsx` got "Explain simply"/"Quiz me" buttons (disabled while
+  thinking/empty) + a "via <skill>" tag on the assistant bubble beside
+  `[tier·model]`; theme-token `.skill-bar`/`.skill-btn`/`.msg-skill` in
+  `index.css`; Markdown render (react-markdown + remark-gfm, rehype-raw OFF, user
+  turns plain) unchanged. Tester: all ACs PASS incl. unit loader/traversal, invalid
+  skill 400-not-500, and a REAL live smoke routing `quiz-me` to strong
+  (`anthropic/claude-sonnet-4.5`, 200 non-empty, seeded "weak on recursion" surfaced
+  in the quiz — M3 memory still applies) + a plain-vs-`explain-simply` diff proving
+  the skill prompt reached the model. Note: a stale uvicorn (no `--reload`) faked an
+  early pass; restart the server after a dev handoff. Visual items (dark toggle,
+  360px, focus ring) left to human. User approved at CHECKPOINT 2.
