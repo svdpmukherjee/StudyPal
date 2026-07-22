@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 const API_URL = 'http://localhost:8000/chat'
 const PROFILE_URL = 'http://localhost:8000/profile'
 const SUMMARIZE_URL = 'http://localhost:8000/summarize'
+const EVALUATE_URL = 'http://localhost:8000/evaluate'
 
 function Bubble({ msg }) {
   if (msg.role === 'error') {
@@ -51,6 +52,11 @@ export default function App() {
   const [summarizing, setSummarizing] = useState(false)
   const [added, setAdded] = useState([])
   const [hasSummarized, setHasSummarized] = useState(false)
+
+  const [evaluating, setEvaluating] = useState(false)
+  const [verdict, setVerdict] = useState(null)
+  const [hasEvaluated, setHasEvaluated] = useState(false)
+  const [evalError, setEvalError] = useState('')
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
@@ -141,6 +147,37 @@ export default function App() {
       )
     } finally {
       setSummarizing(false)
+    }
+  }
+
+  const evaluateLastAnswer = async () => {
+    if (evaluating) return
+
+    setEvaluating(true)
+    try {
+      const res = await fetch(EVALUATE_URL, { method: 'POST' })
+
+      if (!res.ok) {
+        let detail = `Request failed (${res.status})`
+        try {
+          const body = await res.json()
+          if (body?.detail) detail = body.detail
+        } catch {
+          // response wasn't JSON; keep the generic message
+        }
+        throw new Error(detail)
+      }
+
+      const data = await res.json()
+      setVerdict(data.evaluated ? data.verdict : null)
+      setHasEvaluated(true)
+      setEvalError('')
+    } catch (err) {
+      setEvalError(
+        `Could not evaluate the last answer: ${err.message || 'unknown error'}`
+      )
+    } finally {
+      setEvaluating(false)
     }
   }
 
@@ -243,7 +280,33 @@ export default function App() {
               : 'Nothing new to remember'}
           </span>
         )}
+        <button
+          type="button"
+          className="eval-btn"
+          onClick={evaluateLastAnswer}
+          disabled={evaluating}
+        >
+          {evaluating ? 'Evaluating…' : 'Evaluate last answer'}
+        </button>
       </div>
+
+      {(hasEvaluated || evalError) && (
+        <section className="eval-panel" aria-label="Evaluation of last answer">
+          {evalError && <div className="memory-error">{evalError}</div>}
+          {!evalError && hasEvaluated && verdict && (
+            <>
+              <span className="eval-score">Score: {verdict.score}/5</span>
+              <span className="eval-subscores">
+                Accuracy {verdict.accuracy}/5 · Clarity {verdict.clarity}/5
+              </span>
+              <p className="eval-rationale">{verdict.rationale}</p>
+            </>
+          )}
+          {!evalError && hasEvaluated && !verdict && (
+            <p className="eval-rationale">Nothing to evaluate yet</p>
+          )}
+        </section>
+      )}
 
       <form className="add-fact-bar" onSubmit={addFact}>
         <label className="add-fact-label" htmlFor="add-fact-input">

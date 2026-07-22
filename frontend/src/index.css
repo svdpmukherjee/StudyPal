@@ -256,6 +256,64 @@ body {
   word-break: break-word;
 }
 
+/* M6: "Evaluate last answer" control + verdict panel */
+.eval-btn {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.eval-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.eval-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.eval-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.eval-panel {
+  padding: var(--space-3) var(--space-5);
+  background: var(--surface-muted);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.eval-score {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.eval-subscores {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.eval-rationale {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  word-break: break-word;
+}
+
 .message-area {
   flex: 1;
   overflow-y: auto;
@@ -537,7 +595,8 @@ body {
 
   .memory-panel,
   .add-fact-bar,
-  .summarize-row {
+  .summarize-row,
+  .eval-panel {
     padding: var(--space-3) var(--space-4);
   }
 
