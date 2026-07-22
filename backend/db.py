@@ -64,6 +64,30 @@ def get_recent_messages(limit: int = 20) -> list[dict]:
     return [{"role": d["role"], "text": d["text"]} for d in docs]
 
 
+def get_last_qa() -> dict | None:
+    """Return the most recent assistant answer paired with the user question
+    that immediately preceded it, as { "question": ..., "answer": ... }.
+
+    Returns None if there is no assistant turn yet (or no user turn before
+    it). Used by the M6 eval subagent to judge the last answer. Reuses the
+    existing client.
+    """
+    docs = list(
+        messages.find({}, {"role": 1, "text": 1}).sort([("ts", -1), ("_id", -1)])
+    )
+
+    answer = None
+    for i, doc in enumerate(docs):
+        if doc.get("role") == "assistant":
+            answer = doc
+            rest = docs[i + 1 :]
+            for prev in rest:
+                if prev.get("role") == "user":
+                    return {"question": prev.get("text", ""), "answer": answer.get("text", "")}
+            return None
+    return None
+
+
 def add_profile_fact(fact: str) -> list[str]:
     """Trim + add a fact (case-insensitive dedup) and return the full list.
 

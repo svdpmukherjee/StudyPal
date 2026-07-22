@@ -16,9 +16,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pymongo.errors import PyMongoError
 
+import eval as evaluator
 import skills
 import summarizer
-from db import add_profile_fact, get_profile_facts, get_recent_messages, save_message
+from db import (
+    add_profile_fact,
+    get_last_qa,
+    get_profile_facts,
+    get_recent_messages,
+    save_message,
+)
 from openrouter import OpenRouterError, chat_completion
 from router import model_for, route
 
@@ -61,6 +68,13 @@ class ProfileFactRequest(BaseModel):
 class SummarizeResponse(BaseModel):
     added: list[str]
     facts: list[str]
+
+
+class EvaluateResponse(BaseModel):
+    evaluated: bool
+    verdict: dict | None = None
+    tier: str | None = None
+    model: str | None = None
 
 
 @app.get("/health")
@@ -123,6 +137,29 @@ def summarize():
         raise HTTPException(status_code=502, detail=f"Profile store error: {exc}") from exc
 
     return {"added": added, "facts": facts}
+
+
+@app.post("/evaluate", response_model=EvaluateResponse)
+def evaluate():
+    try:
+        qa = get_last_qa()
+    except PyMongoError as exc:
+        raise HTTPException(status_code=502, detail=f"Chat store error: {exc}") from exc
+
+    if qa is None:
+        return {"evaluated": False, "verdict": None, "tier": None, "model": None}
+
+    try:
+        verdict = evaluator.evaluate_answer(qa["question"], qa["answer"])
+    except OpenRouterError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return {
+        "evaluated": True,
+        "verdict": verdict,
+        "tier": "strong",
+        "model": model_for("strong"),
+    }
 
 
 @app.post("/chat", response_model=ChatResponse)
