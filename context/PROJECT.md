@@ -11,6 +11,6 @@ updates it at session end. One row per module (see
 | M3 | Memory | DONE |
 | M4 | Skills | DONE |
 | M5 | Summarizer agent | DONE |
-| M6 | Eval | TODO |
+| M6 | Eval | DONE |
 
 Status values: TODO -> IN PROGRESS -> DONE.

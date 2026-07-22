@@ -80,3 +80,30 @@ Dated log of what got done each session, one line each. Newest at the bottom.
   approved at CHECKPOINT 2. Visual/browser checks (dark toggle, 360px, focus) left
   to human. Note: exact-text dedup piles up near-duplicate facts (a UX/follow-up
   item, out of M5 scope).
+- 2026-07-22: M6 (Eval) DONE — final module; all M1–M6 now DONE. Spec
+  `.claude/specs/M6_eval.md`. Added `backend/eval.py` (LLM-as-judge subagent,
+  mirrors M5: ONE strong-tier call via `router.model_for("strong")` —
+  `anthropic/claude-sonnet-4.5` confirmed live — to score the last answer;
+  `evaluate_answer(question, answer)` + `_parse_verdict()` strip fences/find first
+  `{...}`/`json.loads`, clamp `score`/`accuracy`/`clarity` to ints 1..5 (default 3),
+  rationale trim/fallback, never crashes; `OpenRouterError` propagates; stdlib
+  `json`/`re` only). `backend/db.py` got `get_last_qa()` (most recent assistant
+  reply paired with the preceding user question; `None` if no such pair; single
+  certifi client). `backend/main.py` added `POST /evaluate` (no body,
+  `EvaluateResponse`): empty history -> `{evaluated:false, verdict:null}` with NO
+  model call; else calls the judge (imported `import eval as evaluator` to dodge
+  the `eval` builtin) and returns `{evaluated:true, verdict, tier:"strong",
+  model}`; model/Mongo failure -> clean `HTTPException(502)`, never unhandled 500;
+  `/chat`,`/profile`,`/summarize` untouched. Frontend `App.jsx` got an "Evaluate
+  last answer" button + `.eval-panel` (score/5, accuracy/clarity sub-scores,
+  plain-text rationale; try/catch inline error via `.memory-error`; disabled
+  in-flight; "Nothing to evaluate yet" when no prior answer); theme-token `.eval-*`
+  in `index.css`; Markdown render / rehype-raw-OFF untouched. Tester: ALL ACs PASS
+  incl. unit parser (clean/fenced+clamp/garbage-safe-default + `OpenRouterError`
+  propagation), `get_last_qa` mongomock (empty/assistant-only/mixed), empty-history
+  200-no-model-call, a REAL live strong-tier smoke (live `/chat` mid -> live
+  `/evaluate` 200, `tier:strong`, verdict ints 1..5 + rationale), and a REAL
+  bad-slug negative (invalid `MODEL_STRONG` via env override, `.env` untouched ->
+  clean 502 WITH CORS headers, not 500). Purely-visual items (dark toggle, 360px,
+  focus ring) left to human. Built on branch `feature/evaluation-loop`, merged to
+  master via PR #6 (commit 801aa0f); user approved at CHECKPOINT 2.
